@@ -1,178 +1,215 @@
 /**
- * CF Pages Function - 教师管理 API
- * 对接 WPS 多维表 Sheet 3 "教师列表"
+ * CF Pages Function - 教师管理 API (自包含模式)
  * 
- * GET    /api/teachers       - 获取所有教师
+ * GET    /api/teachers       - 获取所有教师（从 KV 或初始数据）
  * POST   /api/teachers       - 添加教师
  * PUT    /api/teachers       - 更新教师（body 含 id）
  * DELETE /api/teachers?id=x  - 删除教师
  * 
- * SID 来源（优先级）：请求头 X-WPS-SID > KV wps_sid > 环境变量 WPS_SID
+ * POST   /api/teachers/sync - 灵犀调用，同步多维表数据到 KV
+ * 
+ * 数据来源（优先级）：KV > 初始数据
+ * 灵犀定期调用 /api/teachers/sync 同步多维表数据到 KV
  */
 
-const FILE_ID = "p9fvqTUxFrMh15crYKb6rxQt8Xs8SRXuW";
-const SHEET_ID = 3;
-const WPS_API = "https://api.wps.cn";
+const INITIAL_TEACHERS = [
+  { id: "ML0119", name: "\u674e\u989c", grade: "\u56db\u5e74\u7ea7", role: "admin", group: "\u6559\u5b66\u4e3b\u7ba1", password: "maolin2026" },
+  { id: "ML0138", name: "\u6768\u8f76\u7537", grade: "\u4e09\u5e74\u7ea7", role: "teacher", group: "\u7ec4\u957f", password: "maolin2026" },
+  { id: "ML0273", name: "\u664f\u5bb6\u9e4f", grade: "\u4e09\u5e74\u7ea7", role: "teacher", group: "", password: "maolin2026" },
+  { id: "ML0179", name: "\u590f\u5513", grade: "\u4e09\u5e74\u7ea7", role: "teacher", group: "", password: "maolin2026" },
+  { id: "ML0375", name: "\u7f57\u5ff5", grade: "\u4e09\u5e74\u7ea7", role: "teacher", group: "", password: "maolin2026" },
+  { id: "ML0383", name: "\u67f3\u8bd7\u82d7", grade: "\u4e09\u5e74\u7ea7", role: "teacher", group: "", password: "maolin2026" },
+  { id: "ML0392", name: "\u6bdb\u5a1c", grade: "\u4e09\u5e74\u7ea7", role: "teacher", group: "", password: "maolin2026" },
+  { id: "ML0402", name: "\u6797\u946b", grade: "\u4e09\u5e74\u7ea7", role: "teacher", group: "", password: "maolin2026" },
+  { id: "ML0098", name: "\u674e\u4e3d\u971e", grade: "\u56db\u5e74\u7ea7", role: "teacher", group: "\u7ec4\u957f", password: "maolin2026" },
+  { id: "ML0272", name: "\u8983\u6d77\u4e3d", grade: "\u56db\u5e74\u7ea7", role: "teacher", group: "", password: "maolin2026" },
+  { id: "ML0277", name: "\u5b59\u8587", grade: "\u56db\u5e74\u7ea7", role: "teacher", group: "", password: "maolin2026" },
+  { id: "ML0297", name: "\u5ed6\u4e00\u9c94", grade: "\u56db\u5e74\u7ea7", role: "teacher", group: "", password: "maolin2026" },
+  { id: "ML0089", name: "\u674e\u5c27", grade: "\u56db\u5e74\u7ea7", role: "teacher", group: "", password: "maolin2026" },
+  { id: "ML0344", name: "\u5468\u654f", grade: "\u56db\u5e74\u7ea7", role: "teacher", group: "", password: "maolin2026" },
+  { id: "ML0405", name: "\u90b9\u96e8\u5f64", grade: "\u56db\u5e74\u7ea7", role: "teacher", group: "", password: "maolin2026" },
+  { id: "ML0006", name: "\u4ee3\u4f1f", grade: "\u4e94\u5e74\u7ea7", role: "teacher", group: "", password: "maolin2026" },
+  { id: "ML0175", name: "\u96f7\u654f", grade: "\u4e94\u5e74\u7ea7", role: "teacher", group: "\u7ec4\u957f", password: "maolin2026" },
+  { id: "ML0298", name: "\u9c81\u946b", grade: "\u4e94\u5e74\u7ea7", role: "teacher", group: "", password: "maolin2026" },
+  { id: "ML0168", name: "\u6e5b\u4e50\u5929", grade: "\u4e94\u5e74\u7ea7", role: "teacher", group: "", password: "maolin2026" },
+  { id: "ML0363", name: "\u674e\u5f69\u8679", grade: "\u4e94\u5e74\u7ea7", role: "teacher", group: "", password: "maolin2026" },
+  { id: "ML0414", name: "\u5434\u8476", grade: "\u4e94\u5e74\u7ea7", role: "teacher", group: "", password: "maolin2026" },
+  { id: "ML0170", name: "\u738b\u7426", grade: "\u516d\u5e74\u7ea7", role: "teacher", group: "\u7ec4\u957f", password: "maolin2026" },
+  { id: "ML0280", name: "\u5f20\u601d\u7426", grade: "\u516d\u5e74\u7ea7", role: "teacher", group: "", password: "maolin2026" },
+  { id: "ML0303", name: "\u674e\u5bb6\u8c6a", grade: "\u516d\u5e74\u7ea7", role: "teacher", group: "", password: "maolin2026" },
+  { id: "ML0314", name: "\u5468\u6e38", grade: "\u516d\u5e74\u7ea7", role: "teacher", group: "", password: "maolin2026" },
+  { id: "ML0385", name: "\u9ec4\u5a01", grade: "\u516d\u5e74\u7ea7", role: "teacher", group: "", password: "maolin2026" },
+  { id: "ML0415", name: "\u5468\u96c5\u4e3d", grade: "\u516d\u5e74\u7ea7", role: "teacher", group: "", password: "maolin2026" },
+];
 
-function wpsHeaders(sid) {
-  return {
-    "Content-Type": "application/json",
-    "Cookie": "wps_sid=" + sid,
-    "Origin": "https://365.kdocs.cn",
-    "Referer": "https://365.kdocs.cn/",
-  };
-}
+// GRADES constant
+const GRADES = ["\u4e09\u5e74\u7ea7", "\u56db\u5e74\u7ea7", "\u4e94\u5e74\u7ea7", "\u516d\u5e74\u7ea7", "\u4e03\u5e74\u7ea7", "\u516b\u5e74\u7ea7", "\u4e5d\u5e74\u7ea7"];
 
-async function resolveSid(context) {
-  // 1. Request header (灵犀注入)
-  const headerSid = context.request.headers.get("X-WPS-SID");
-  if (headerSid) return headerSid;
-  // 2. KV storage (通过 /api/auth-sid 设置)
-  if (context.env?.TEACHERS_KV) {
-    const kvSid = await context.env.TEACHERS_KV.get("wps_sid");
-    if (kvSid) return kvSid;
-  }
-  // 3. Environment variable
-  return context.env?.WPS_SID || "";
-}
+const KV_KEY = "teachers_data";
+let memoryCache = null;
 
-async function listTeachers(sid) {
-  const url = `${WPS_API}/v7/dbsheet/${FILE_ID}/sheets/${SHEET_ID}/records?page_size=1000`;
-  const resp = await fetch(url, {
-    method: "POST",
-    headers: wpsHeaders(sid),
-    body: JSON.stringify({}),
-  });
-  if (!resp.ok) throw new Error("WPS API " + resp.status);
-  const data = await resp.json();
-  if (data.code !== 0) throw new Error(data.msg || "获取失败");
+async function getTeachers(context) {
+  if (memoryCache) return memoryCache;
   
-  return (data.data?.records || []).map(rec => {
-    const f = typeof rec.fields === "string" ? JSON.parse(rec.fields) : (rec.fields || {});
-    return {
-      id: f["工号"] || rec.record_id || rec.id || "",
-      name: f["姓名"] || "",
-      grade: f["年级"] || "",
-      role: (f["角色"] === "教学主管" || f["角色"] === "管理员") ? "admin" : "teacher",
-      group: f["职务"] || "",
-      password: f["密码"] || "maolin2026",
-      _recordId: rec.record_id || rec.id || "",
-    };
-  });
+  // Try KV first
+  if (context.env?.TEACHERS_KV) {
+    try {
+      const cached = await context.env.TEACHERS_KV.get(KV_KEY);
+      if (cached) {
+        memoryCache = JSON.parse(cached);
+        return memoryCache;
+      }
+    } catch (e) { /* fallthrough */ }
+  }
+  
+  // Fallback to initial data
+  memoryCache = INITIAL_TEACHERS;
+  return memoryCache;
 }
 
-function toFields(t) {
-  return {
-    "工号": t.id || "",
-    "姓名": t.name || "",
-    "密码": t.password || "maolin2026",
-    "年级": t.grade || "",
-    "角色": t.role === "admin" ? "教学主管" : "教师",
-    "职务": t.group || "",
-  };
+async function saveTeachers(context, teachers) {
+  memoryCache = teachers;
+  if (context.env?.TEACHERS_KV) {
+    try {
+      await context.env.TEACHERS_KV.put(KV_KEY, JSON.stringify(teachers));
+    } catch (e) {
+      console.error("KV save failed:", e);
+    }
+  }
 }
 
-function strip(t) { const { _recordId, ...r } = t; return r; }
-
-function json(data, status = 200) {
+function jsonResp(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
-  });
-}
-
-async function findRecId(sid, workId) {
-  const list = await listTeachers(sid);
-  const found = list.find(t => t.id === workId);
-  return found?._recordId || null;
-}
-
-export async function onRequestGet(context) {
-  try {
-    const sid = await resolveSid(context);
-    if (!sid) return json({ success: false, error: "未授权：缺少 SID（请联系管理员配置）" }, 401);
-    const teachers = await listTeachers(sid);
-    return json({ success: true, teachers: teachers.map(strip) });
-  } catch (err) {
-    return json({ success: false, error: err.message }, 500);
-  }
-}
-
-export async function onRequestPost(context) {
-  try {
-    const sid = await resolveSid(context);
-    if (!sid) return json({ success: false, error: "未授权" }, 401);
-    const body = await context.request.json();
-    if (!body.name) return json({ success: false, error: "姓名不能为空" }, 400);
-
-    const url = `${WPS_API}/v7/dbsheet/${FILE_ID}/sheets/${SHEET_ID}/records/batch_create`;
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: wpsHeaders(sid),
-      body: JSON.stringify({ records: [{ fields_value: JSON.stringify(toFields(body)) }] }),
-    });
-    const data = await resp.json();
-    if (data.code !== 0) throw new Error(data.msg || "创建失败");
-    return json({ success: true, recordId: data.data?.records?.[0]?.record_id });
-  } catch (err) {
-    return json({ success: false, error: err.message }, 500);
-  }
-}
-
-export async function onRequestPut(context) {
-  try {
-    const sid = await resolveSid(context);
-    if (!sid) return json({ success: false, error: "未授权" }, 401);
-    const body = await context.request.json();
-    if (!body.id) return json({ success: false, error: "缺少工号" }, 400);
-
-    const recordId = await findRecId(sid, body.id);
-    if (!recordId) return json({ success: false, error: "未找到教师" }, 404);
-
-    const url = `${WPS_API}/v7/dbsheet/${FILE_ID}/sheets/${SHEET_ID}/records/batch_update`;
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: wpsHeaders(sid),
-      body: JSON.stringify({ records: [{ record_id: recordId, fields_value: JSON.stringify(toFields(body)) }] }),
-    });
-    const data = await resp.json();
-    if (data.code !== 0) throw new Error(data.msg || "更新失败");
-    return json({ success: true });
-  } catch (err) {
-    return json({ success: false, error: err.message }, 500);
-  }
-}
-
-export async function onRequestDelete(context) {
-  try {
-    const sid = await resolveSid(context);
-    if (!sid) return json({ success: false, error: "未授权" }, 401);
-    const teacherId = new URL(context.request.url).searchParams.get("id");
-    if (!teacherId) return json({ success: false, error: "缺少工号" }, 400);
-
-    const recordId = await findRecId(sid, teacherId);
-    if (!recordId) return json({ success: false, error: "未找到教师" }, 404);
-
-    const url = `${WPS_API}/v7/dbsheet/${FILE_ID}/sheets/${SHEET_ID}/records/batch_delete`;
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: wpsHeaders(sid),
-      body: JSON.stringify({ record_ids: [recordId] }),
-    });
-    const data = await resp.json();
-    if (data.code !== 0) throw new Error(data.msg || "删除失败");
-    return json({ success: true });
-  } catch (err) {
-    return json({ success: false, error: err.message }, 500);
-  }
-}
-
-export async function onRequestOptions() {
-  return new Response(null, {
     headers: {
+      "Content-Type": "application/json",
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, X-WPS-SID",
+      "Access-Control-Allow-Headers": "Content-Type",
     },
   });
+}
+
+// ===== Sync endpoints =====
+// POST /api/teachers/sync - 灵犀调用，用多维表数据替换 KV
+// GET  /api/teachers/sync - 获取当前缓存数据（调试用）
+
+async function handleSyncPost(context) {
+  try {
+    const body = await context.request.json();
+    
+    if (!body.teachers || !Array.isArray(body.teachers)) {
+      return jsonResp({ success: false, error: "需要 teachers 数组" }, 400);
+    }
+    
+    await saveTeachers(context, body.teachers);
+    
+    return jsonResp({ 
+      success: true, 
+      message: "同步成功", 
+      total: body.teachers.length,
+    });
+  } catch (err) {
+    return jsonResp({ success: false, error: err.message }, 500);
+  }
+}
+
+async function handleSyncGet(context) {
+  try {
+    const teachers = await getTeachers(context);
+    return jsonResp({ success: true, teachers, total: teachers.length });
+  } catch (err) {
+    return jsonResp({ success: false, error: err.message }, 500);
+  }
+}
+
+// ===== Main request handler =====
+export async function onRequest(context) {
+  const url = new URL(context.request.url);
+  const path = url.pathname;
+  const method = context.request.method;
+  
+  // CORS
+  if (method === "OPTIONS") {
+    return jsonResp(null);
+  }
+  
+  // Sync sub-route
+  if (path.endsWith("/sync")) {
+    if (method === "POST") return handleSyncPost(context);
+    if (method === "GET") return handleSyncGet(context);
+    return jsonResp({ success: false, error: "Method not allowed" }, 405);
+  }
+  
+  try {
+    const teachers = await getTeachers(context);
+    
+    switch (method) {
+      case "GET": {
+        // Filter out internal _recordId
+        const cleaned = teachers.map(({ _recordId, ...t }) => t);
+        return jsonResp({ success: true, teachers: cleaned });
+      }
+      
+      case "POST": {
+        const body = await context.request.json();
+        if (!body.name) {
+          return jsonResp({ success: false, error: "教师姓名不能为空" }, 400);
+        }
+        
+        const newTeacher = {
+          id: body.id || "ML" + Date.now(),
+          name: body.name,
+          grade: body.grade || "\u56db\u5e74\u7ea7",
+          role: body.role || "teacher",
+          group: body.group || "",
+          password: body.password || "maolin2026",
+        };
+        
+        teachers.push(newTeacher);
+        await saveTeachers(context, teachers);
+        
+        return jsonResp({ success: true, teacher: newTeacher });
+      }
+      
+      case "PUT": {
+        const body = await context.request.json();
+        if (!body.id) {
+          return jsonResp({ success: false, error: "缺少教师工号" }, 400);
+        }
+        
+        const idx = teachers.findIndex(t => t.id === body.id);
+        if (idx === -1) {
+          return jsonResp({ success: false, error: "未找到该教师" }, 404);
+        }
+        
+        teachers[idx] = { ...teachers[idx], ...body };
+        await saveTeachers(context, teachers);
+        
+        return jsonResp({ success: true });
+      }
+      
+      case "DELETE": {
+        const teacherId = url.searchParams.get("id");
+        if (!teacherId) {
+          return jsonResp({ success: false, error: "缺少教师工号" }, 400);
+        }
+        
+        const idx = teachers.findIndex(t => t.id === teacherId);
+        if (idx === -1) {
+          return jsonResp({ success: false, error: "未找到该教师" }, 404);
+        }
+        
+        teachers.splice(idx, 1);
+        await saveTeachers(context, teachers);
+        
+        return jsonResp({ success: true });
+      }
+      
+      default:
+        return jsonResp({ success: false, error: "Method not supported" }, 405);
+    }
+  } catch (err) {
+    return jsonResp({ success: false, error: err.message }, 500);
+  }
 }
