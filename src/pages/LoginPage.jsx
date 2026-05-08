@@ -36,7 +36,6 @@ export default function LoginPage() {
         {/* 品牌区域 */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white">茂林教育</h1>
-          <p className="text-primary-200 mt-2">小学数学项目组</p>
         </div>
 
         {/* 登录卡片 */}
