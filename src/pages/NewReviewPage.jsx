@@ -1031,7 +1031,7 @@ export default function NewReviewPage() {
 
                     {dim.standards && dim.standards.length > 0 && (
 
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="space-y-2">
 
                         {dim.standards.map(s => {
 
@@ -1041,13 +1041,25 @@ export default function NewReviewPage() {
 
                             <div key={s.id} className="bg-gray-50 rounded-lg px-3 py-2">
 
-                              <div className="flex items-center justify-between">
+                              <div className="flex items-center justify-between mb-1">
 
-                                <span className="text-xs text-gray-600 leading-tight">{s.name}</span>
+                                <div className="flex items-center gap-2">
+
+                                  <span className="text-xs font-medium text-gray-700">{s.name}</span>
+
+                                  <span className="text-[10px] text-gray-400">({s.maxScore}分)</span>
+
+                                </div>
 
                                 <span className={"text-xs font-semibold " + (sRatio >= 0.9 ? "text-green-600" : sRatio >= 0.75 ? "text-blue-600" : sRatio >= 0.6 ? "text-yellow-600" : "text-red-600")}>{s.score}/{s.maxScore}</span>
 
                               </div>
+
+                              {s.comment && (
+
+                                <p className="text-[11px] text-gray-500 leading-relaxed pl-0.5">{s.comment}</p>
+
+                              )}
 
                             </div>
 
