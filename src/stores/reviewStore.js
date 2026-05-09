@@ -3,29 +3,48 @@ import { create } from "zustand"
 const STORAGE_KEY = "lr_reviews"
 const API_BASE = "/api/reviews"
 
-function loadReviews() {
+function loadLocal() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved) return JSON.parse(saved)
+    if (saved) {
+      const parsed = JSON.parse(saved)
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed
+    }
   } catch {}
-  return []
+  return null
 }
 
-function saveReviews(reviews) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(reviews))
+function saveLocal(reviews) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(reviews))
+  } catch (e) {
+    console.warn("保存评课记录到 localStorage 失败:", e)
+  }
 }
 
 const useReviewStore = create((set, get) => ({
-  reviews: loadReviews(),
+  reviews: [],
   isLoading: false,
   isSynced: false,
   syncError: null,
+  initialized: false,
 
   /**
-   * 从WPS多维表加载评课记录（持久化数据源）
+   * 加载评课记录
+   * 优先级: localStorage > API（后台同步）
+   * localStorage 是主数据源，手动新增的评课不会因部署/API不可用而丢失
    */
   fetchReviews: async () => {
+    if (get().isLoading) return
     set({ isLoading: true, syncError: null })
+
+    // 1. 先读取本地缓存（即使没有网络也能立即展示）
+    const local = loadLocal()
+    if (local) {
+      set({ reviews: local, initialized: true })
+    }
+
+    // 2. 后台从 API 同步（不阻塞 UI，失败不影响本地数据）
     try {
       const response = await fetch(API_BASE)
       if (!response.ok) throw new Error("加载失败 (" + response.status + ")")
@@ -48,26 +67,23 @@ const useReviewStore = create((set, get) => ({
           createdAt: r.createdAt,
           status: "completed",
         }))
-        saveReviews(reviews)
+        saveLocal(reviews)
         set({ reviews, isSynced: true })
-        return reviews
       } else {
         throw new Error(data.error || "加载失败")
       }
     } catch (err) {
-      console.warn("从WPS多维表加载失败，使用本地缓存:", err.message)
+      console.warn("从API加载评课记录失败（使用本地缓存）:", err.message)
       set({ syncError: err.message, isSynced: false })
-      return get().reviews
     } finally {
       set({ isLoading: false })
     }
   },
 
   /**
-   * 新增评课记录 → 直接写入WPS多维表（持久化）
+   * 新增评课记录 → 先存本地，再尝试同步到 API
    */
   addReview: async (review) => {
-    // 先乐观更新本地
     const localId = "R" + Date.now()
     const newReview = {
       ...review,
@@ -76,10 +92,10 @@ const useReviewStore = create((set, get) => ({
       status: "completed",
     }
     const reviews = [newReview, ...get().reviews]
-    saveReviews(reviews)
+    saveLocal(reviews)
     set({ reviews })
 
-    // 再写入WPS多维表
+    // 后台同步到 API（不阻塞）
     try {
       const response = await fetch(API_BASE, {
         method: "POST",
@@ -107,15 +123,15 @@ const useReviewStore = create((set, get) => ({
         if (data.success && data.review) {
           newReview.id = data.review.id
           const updated = [newReview, ...get().reviews.filter(r => r.id !== localId)]
-          saveReviews(updated)
+          saveLocal(updated)
           set({ reviews: updated, isSynced: true })
         }
       } else {
         const errData = await response.json().catch(() => ({}))
-        throw new Error(errData.error || "写入多维表失败")
+        throw new Error(errData.error || "写入API失败")
       }
     } catch (err) {
-      console.warn("写入WPS多维表失败，数据仅保留在本地:", err.message)
+      console.warn("写入API失败，数据已保存到本地:", err.message)
     }
 
     return newReview
@@ -125,9 +141,10 @@ const useReviewStore = create((set, get) => ({
     try {
       await fetch(`/api/reviews?id=${id}`, { method: "DELETE" })
     } catch (e) {
-      console.error("删除多维表记录失败:", e)
+      console.error("删除API记录失败:", e)
     }
     const reviews = get().reviews.filter(r => r.id !== id)
+    saveLocal(reviews)
     set({ reviews })
   },
 
@@ -144,7 +161,6 @@ const useReviewStore = create((set, get) => ({
     const reviews = get().reviews
     const total = reviews.length
 
-    // 四级评级统计
     const excellent = reviews.filter(r => r.totalScore >= 90).length
     const good = reviews.filter(r => r.totalScore >= 75 && r.totalScore < 90).length
     const pass = reviews.filter(r => r.totalScore >= 60 && r.totalScore < 75).length
