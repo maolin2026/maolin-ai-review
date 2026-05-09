@@ -1,62 +1,49 @@
 // 评课标准配置
-// 茂林磨课标准（19条→20条，满分100分）—— 用于评教案、评磨课
+// 茂林磨课标准（4维度14项，满分100分）—— 用于评教案、评磨课
 // 茂林好课21条标准（满分100分）—— 用于评实录
 
-// ==================== 茂林磨课标准（20条，100分） ====================
+// ==================== 茂林磨课标准（4维度14项，100分） ====================
 export const REVIEW_DIMENSIONS = [
   {
-    id: "preparation",
-    name: "教学准备",
-    weight: 15,
+    id: "accuracy",
+    name: "教学内容准确性与深度",
+    weight: 30,
     standards: [
-      { id: "p1", name: "教学目标明确", description: "教学目标符合课标要求，准确、具体、可检测", maxScore: 5 },
-      { id: "p2", name: "重点难点把握", description: "准确把握教材重点难点，处理得当", maxScore: 5 },
-      { id: "p3", name: "教学准备充分", description: "教具、课件、板书设计等准备充分，符合教学需要", maxScore: 5 },
+      { id: "ac1", name: "知识点准确性", description: "教学内容科学准确，无知识性错误，概念讲解清晰无误", maxScore: 12 },
+      { id: "ac2", name: "重难点突出", description: "准确把握教材重点难点，处理得当，课堂时间向重难点倾斜", maxScore: 10 },
+      { id: "ac3", name: "内容深度与拓展", description: "教学内容有适当深度和拓展性，不局限于教材表面", maxScore: 8 },
     ]
   },
   {
-    id: "content",
-    name: "教学内容",
+    id: "process",
+    name: "教学过程设计",
+    weight: 30,
+    standards: [
+      { id: "pr1", name: "教学环节完整", description: "教学环节齐全（引入、新课、练习、总结、作业等），流程完整", maxScore: 10 },
+      { id: "pr2", name: "环节衔接自然", description: "各教学环节过渡自然流畅，逻辑连贯", maxScore: 8 },
+      { id: "pr3", name: "讲解结构化", description: "知识讲解条理清晰，结构层次分明，由浅入深", maxScore: 12 },
+    ]
+  },
+  {
+    id: "expression",
+    name: "教师表达与提问",
     weight: 25,
     standards: [
-      { id: "c1", name: "内容准确无误", description: "教学内容科学准确，无知识性错误", maxScore: 5 },
-      { id: "c2", name: "知识结构清晰", description: "知识讲解条理清晰，逻辑性强，层次分明", maxScore: 5 },
-      { id: "c3", name: "教材处理得当", description: "对教材内容的处理和重组合理有效", maxScore: 5 },
-      { id: "c4", name: "例题选择恰当", description: "例题典型、梯度合理，有助于学生理解", maxScore: 5 },
-      { id: "c5", name: "练习设计有效", description: "课堂练习设计有针对性、层次性和拓展性", maxScore: 5 },
+      { id: "ex1", name: "表述清晰简洁", description: "教学语言准确、简洁、生动，学生易于理解", maxScore: 5 },
+      { id: "ex2", name: "提问设计有层次", description: "提问从具体到抽象，有层次梯度，几乎无低效提问（是不是、对不对）", maxScore: 8 },
+      { id: "ex3", name: "启发式提问", description: "善于启发引导，提问能激发学生深度思考和探究", maxScore: 7 },
+      { id: "ex4", name: "数学语言规范性", description: "数学术语使用规范准确，符号表达标准", maxScore: 5 },
     ]
   },
   {
-    id: "method",
-    name: "教学方法",
-    weight: 25,
-    standards: [
-      { id: "m1", name: "教学方法灵活", description: "根据教学内容和学生实际灵活选择教学方法", maxScore: 5 },
-      { id: "m2", name: "启发式教学", description: "善于启发引导，注重培养学生的思维能力和探究意识", maxScore: 5 },
-      { id: "m3", name: "互动有效", description: "师生互动、生生互动充分有效，课堂氛围活跃", maxScore: 5 },
-      { id: "m4", name: "时间分配合理", description: "各教学环节时间分配合理，节奏把控得当", maxScore: 5 },
-      { id: "m5", name: "信息技术运用", description: "合理运用信息技术手段辅助教学，效果良好", maxScore: 5 },
-    ]
-  },
-  {
-    id: "effect",
-    name: "教学效果",
-    weight: 20,
-    standards: [
-      { id: "e1", name: "学生参与度高", description: "学生积极主动参与课堂学习活动", maxScore: 5 },
-      { id: "e2", name: "目标达成度高", description: "教学目标达成度高，学生掌握效果好", maxScore: 5 },
-      { id: "e3", name: "反馈及时有效", description: "能及时获取学生反馈并做出针对性调整", maxScore: 5 },
-      { id: "e4", name: "分层教学落实", description: "关注不同层次学生的学习需求，因材施教", maxScore: 5 },
-    ]
-  },
-  {
-    id: "literacy",
-    name: "教师素养",
+    id: "feedback",
+    name: "师生互动与反馈",
     weight: 15,
     standards: [
-      { id: "l1", name: "语言表达规范", description: "教学语言准确、简洁、生动，富有感染力", maxScore: 5 },
-      { id: "l2", name: "板书设计合理", description: "板书设计规范、美观，突出教学重点", maxScore: 5 },
-      { id: "l3", name: "课堂管理能力", description: "课堂组织有序，能有效管理学生行为，应变能力强", maxScore: 5 },
+      { id: "fd1", name: "教师追问与回应", description: "对学生回答能及时追问，引导学生深入思考", maxScore: 5 },
+      { id: "fd2", name: "针对性反馈", description: "对学生表现给予具体、有针对性的反馈，非简单评价"对/错"", maxScore: 5 },
+      { id: "fd3", name: "错误资源利用", description: "善用学生错误作为教学资源，通过纠错促进理解", maxScore: 3 },
+      { id: "fd4", name: "习惯培养", description: "关注学生听课习惯（坐姿、笔记、书写等），适时引导", maxScore: 2 },
     ]
   }
 ]
@@ -217,10 +204,10 @@ ${standardList}
    - 不要给满分！即使是表现很好的课堂，也应扣1-2分体现改进空间
    - 总分通常应在60-88分之间，90分以上仅限教学极其优秀的课堂
    - 每个维度内的不同标准项要有分差，不要全部给同一分值
-2. dimensions必须按大维度分组（如"七步教学法"含7个子项），不要把每个子项当作独立维度
+2. dimensions必须按大维度分组（如"教学内容准确性与深度"含3个子项），不要把每个子项当作独立维度
 3. 【关键】每个标准的comment（评语）必须具体、有针对性，结合${typeName}的实际内容指出该标准项的具体表现和问题。例如：
-   - 好的评语："课堂引入用了'猜数字'游戏，学生兴趣浓厚，但游戏时间偏长（5分钟），建议控制在2-3分钟"
-   - 差的评语："引入环节做得不错"（过于笼统，没有具体内容）
+   - 好的评语："知识点讲解中关于'分数的基本性质'概念清晰，举例准确，但在约分环节有一处符号书写不规范，需注意"
+   - 差的评语："知识点准确"（过于笼统，没有具体内容）
 4. 维度综合评语（dimension.comment）要概括该维度的整体表现，指出主要优点和突出短板
 
 请严格按以下JSON格式返回（dimensions按大维度分组，每个维度包含standards子数组）：
@@ -228,13 +215,12 @@ ${standardList}
   "totalScore": <总分>,
   "dimensions": [
     {
-      "dimensionId": "<大维度ID，如seven_steps>",
-      "name": "<大维度名称，如七步教学法>",
+      "dimensionId": "<大维度ID>",
+      "name": "<大维度名称>",
       "score": <该大维度总得分>,
-      "maxScore": <该大维度满分，如30>,
+      "maxScore": <该大维度满分>,
       "standards": [
-        {"id": "s1", "name": "练习测错题讲解", "score": <得分>, "maxScore": 3, "comment": "<结合教学实际的具体评语，说明好在哪里或哪里不足>"},
-        {"id": "s2", "name": "进门考/出门考", "score": <得分>, "maxScore": 2, "comment": "<结合教学实际的具体评语>"}
+        {"id": "<标准项ID>", "name": "<标准项名称>", "score": <得分>, "maxScore": <满分>, "comment": "<结合教学实际的具体评语>"}
       ],
       "comment": "<该维度综合评语>"
     }
@@ -243,4 +229,4 @@ ${standardList}
   "suggestions": ["<改进建议1，要具体可操作>", "<改进建议2>", "<改进建议3>"],
   "highlights": ["<亮点1，要具体>", "<亮点2>"]
 }`
-}`
+}

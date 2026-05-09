@@ -110,9 +110,9 @@ export async function callZhipuReview({ type, teacherName, grade, subject, conte
 
 
 
-  var D = {preparation:15,content:25,method:25,effect:20,literacy:15,seven_steps:30,interest:20,inspire:12,habit:10,implement:10,temperament:8,guarantee:5,overall:5}
+  var D = {accuracy:30,process:30,expression:25,feedback:15,seven_steps:30,interest:20,inspire:12,habit:10,implement:10,temperament:8,guarantee:5,overall:5}
 
-  var S = {p1:5,p2:5,p3:5,c1:5,c2:5,c3:5,c4:5,c5:5,m1:5,m2:5,m3:5,m4:5,m5:5,e1:5,e2:5,e3:5,e4:5,l1:5,l2:5,l3:5,s1:3,s2:2,s3:5,s4:7,s5:5,s6:4,s7:5,i1:5,i2:5,i3:5,i4:5,h1:6,h2:6,b1:5,b2:5,im1:5,im2:5,t1:4,t2:4,g1:5,o1:5}
+  var S = {ac1:12,ac2:10,ac3:8,pr1:10,pr2:8,pr3:12,ex1:5,ex2:8,ex3:7,ex4:5,fd1:5,fd2:5,fd3:3,fd4:2,s1:3,s2:2,s3:5,s4:7,s5:5,s6:4,s7:5,i1:5,i2:5,i3:5,i4:5,h1:6,h2:6,b1:5,b2:5,im1:5,im2:5,t1:4,t2:4,g1:5,o1:5}
 
   var fd = (parsed.dimensions || []).map(function(dim) {
 
