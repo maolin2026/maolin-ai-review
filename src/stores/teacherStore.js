@@ -1,4 +1,20 @@
 import { create } from "zustand"
+import { INITIAL_TEACHERS } from "../data/initialTeachers"
+
+function fallbackToLocal(set) {
+  try {
+    const saved = localStorage.getItem("lr_teachers")
+    if (saved) {
+      const teachers = JSON.parse(saved)
+      if (teachers.length) {
+        set({ teachers, initialized: true })
+        return
+      }
+    }
+  } catch {}
+  // 最终兜底到初始数据
+  set({ teachers: INITIAL_TEACHERS, initialized: true })
+}
 
 const useTeacherStore = create((set, get) => ({
   teachers: [],
@@ -20,11 +36,11 @@ const useTeacherStore = create((set, get) => ({
       }
       // API 返回错误时 fallback 到本地缓存
       set({ error: data.error || "加载失败" })
-      fallbackToLocal()
+      fallbackToLocal(set)
     } catch (err) {
       console.warn("从 API 加载教师列表失败，使用本地缓存:", err.message)
       set({ error: "网络错误，使用本地缓存" })
-      fallbackToLocal()
+      fallbackToLocal(set)
     } finally {
       set({ loading: false })
     }
@@ -112,22 +128,5 @@ const useTeacherStore = create((set, get) => ({
     return stats
   },
 }))
-
-function fallbackToLocal() {
-  try {
-    const saved = localStorage.getItem("lr_teachers")
-    if (saved) {
-      const teachers = JSON.parse(saved)
-      if (teachers.length) {
-        set({ teachers, initialized: true })
-        return
-      }
-    }
-  } catch {}
-  // 最终 fallback 到初始数据
-  import("../data/initialTeachers").then(({ INITIAL_TEACHERS }) => {
-    set({ teachers: INITIAL_TEACHERS, initialized: true })
-  })
-}
 
 export default useTeacherStore
