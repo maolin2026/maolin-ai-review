@@ -29,7 +29,14 @@ export async function onRequestPost(context) {
       body: proxyFormData,
     });
 
-    const data = await response.json();
+    // 先获取文本，再尝试 JSON 解析（避免 502 等非 JSON 响应导致崩溃）
+    const rawText = await response.text();
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      data = { error: { message: rawText.slice(0, 500) } };
+    }
 
     if (!response.ok) {
       return new Response(JSON.stringify({
